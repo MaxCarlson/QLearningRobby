@@ -1,0 +1,11 @@
+5 sensors
+	N - Wall, Nothing, Can
+	S - Wall, Nothing, Can
+	E - Wall, Nothing, Can
+	W - Wall, Nothing, Can
+	C - Nothing, Can
+
+
+
+
+3 * 3 * 3 * 3 * 2
