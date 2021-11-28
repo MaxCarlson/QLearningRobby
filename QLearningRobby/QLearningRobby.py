@@ -72,7 +72,7 @@ class Robby():
         act = 0
         actions = self.q[d0][d1][d2][d3][d4]
 
-        r = np.random.rand(0, 1)
+        r = np.random.rand()
         if r < eps:
             act = np.random.randint(0,5)
         else:
@@ -95,7 +95,7 @@ class Robby():
 
         s0, s1, s2, s3, s4 = state.getInfo()
         stateP1 = self.q[s0][s1][s2][s3][s4]
-        maxAP = stateP1[stateP1.argmax]
+        maxAP = stateP1[stateP1.argmax()]
 
         self.q[d0][d1][d2][d3][d4][act] += eta * (reward + gamma * maxAP - q0)
 
@@ -109,6 +109,7 @@ def run(episodes, actions, eta, gamma):
     robby = Robby()
 
     eps = 0.1
+    rewards = []
     for N in range(episodes):
         if N and N % 50 == 0 and eps:
             #eps -= 0.001
@@ -119,6 +120,9 @@ def run(episodes, actions, eta, gamma):
         state = State()
         for M in range(actions):
             robby.action(state, eps, eta, gamma)
+
+        rewards.append(state.reward)
+        print(f'Epoch {N+1}, Reward: {state.reward}')
 
 
 
