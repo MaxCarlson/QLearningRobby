@@ -9,21 +9,23 @@ class State():
     WALL = 2
 
     def __init__(self):
-        self.grid = np.random.randint(0,1, size=(10,10))
-        self.pos = np.random.randint(0, 9, 2)
+        self.grid = np.random.randint(0, 2, size=(10,10))
+        self.pos = np.random.randint(0, 10, 2)
+        if self.pos[1] == 10:
+            a=4
         self.reward = 0
 
     def current(self):
         return self.grid[self.pos[0]][self.pos[1]]
 
     def north(self):
-        return self.grid[self.pos[0]][self.pos[1]+1] if self.pos[1] > 0 else State.WALL
+        return self.grid[self.pos[0]-1][self.pos[1]] if self.pos[0] > 0 else State.WALL
     def south(self):
-        return self.grid[self.pos[0]][self.pos[1]-1] if self.pos[1] < 10 else State.WALL
+        return self.grid[self.pos[0]+1][self.pos[1]] if self.pos[0] < 9 else State.WALL
     def east(self):
-        return self.grid[self.pos[0]+1][self.pos[1]] if self.pos[0] > 0 else State.WALL
+        return self.grid[self.pos[0]][self.pos[1]+1] if self.pos[1] < 9 else State.WALL
     def west(self):
-        return self.grid[self.pos[0]-1][self.pos[1]] if self.pos[0] < 10 else State.WALL
+        return self.grid[self.pos[0]][self.pos[1]-1] if self.pos[1] > 0 else State.WALL
 
     def getInfo(self):
         return self.current(), self.north(), self.south(), self.east(), self.west()
@@ -36,15 +38,18 @@ class State():
             # Wall checking has already been done for us by this point, 
             # no need to repeat it
             if dir == NORTH:
-                self.pos[1] - 1
+                self.pos[0] -= 1
             elif dir == SOUTH:
-                self.pos[1] + 1
+                self.pos[0] += 1
             elif dir == EAST:
-                self.pos[0] + 1
+                self.pos[1] += 1
             elif dir == WEST:
-                self.pos[0] - 1
+                self.pos[1] -= 1
             else:
                 RuntimeError(f'Invalid movement direction {dir}')
+
+        if self.pos[0] < 0 or self.pos[0] > 9 or self.pos[1] < 0 or self.pos[1] > 9:
+            a=5
 
         self.reward += reward
         return reward
@@ -63,7 +68,7 @@ class Robby():
     def __init__(self):
         # Dim 1 is no can, or can - currrent square
         # Dim 2,3,4,5 (N,S,E,W) is empty,can,wall 
-        # Dim 6 are actions, N,S,E,W,Pickup
+        # Dim 6 are actions: Pickup,N,S,E,W,
         self.q = np.zeros((2, 3, 3, 3, 3, 5))
 
     def action(self, state, eps, eta, gamma):
@@ -78,6 +83,7 @@ class Robby():
         else:
             act = actions.argmax()
 
+        # Current reward for this action at this state
         q0 = actions[act]
 
         reward = 0
@@ -99,7 +105,6 @@ class Robby():
 
         self.q[d0][d1][d2][d3][d4][act] += eta * (reward + gamma * maxAP - q0)
 
-        a=5
 
 
 
