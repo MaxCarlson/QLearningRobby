@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 NORTH = 1
 SOUTH = 2
 EAST = 3
@@ -48,9 +48,6 @@ class State():
             else:
                 RuntimeError(f'Invalid movement direction {dir}')
 
-        if self.pos[0] < 0 or self.pos[0] > 9 or self.pos[1] < 0 or self.pos[1] > 9:
-            a=5
-
         self.reward += reward
         return reward
 
@@ -71,7 +68,7 @@ class Robby():
         # Dim 6 are actions: Pickup,N,S,E,W,
         self.q = np.zeros((2, 3, 3, 3, 3, 5))
 
-    def action(self, state, eps, eta, gamma):
+    def action(self, state, eps, eta, gamma, training):
         d0, d1, d2, d3, d4 = state.getInfo()
 
         act = 0
@@ -98,6 +95,8 @@ class Robby():
         elif act == 4:
             reward = state.move(d4, WEST) 
 
+        if not training:
+            return
 
         s0, s1, s2, s3, s4 = state.getInfo()
         stateP1 = self.q[s0][s1][s2][s3][s4]
@@ -110,26 +109,49 @@ class Robby():
 
 
 
-def run(episodes, actions, eta, gamma):
-    robby = Robby()
+def run(robby, episodes, actions, eta, gamma, training=True):
+ 
+
+    plotPoints = 100
 
     eps = 0.1
+    totalRewards = 0
+    ttotalRewards = 0
     rewards = []
+    allRewards = []
     for N in range(episodes):
-        if N and N % 50 == 0 and eps:
+        if training and N and N % 50 == 0 and eps:
             #eps -= 0.001
-            eps -= 0.002
+            eps -= 0.005
             eps = 0 if eps < 0 else eps
 
            
         state = State()
         for M in range(actions):
-            robby.action(state, eps, eta, gamma)
+            robby.action(state, eps, eta, gamma, training)
 
-        rewards.append(state.reward)
+        totalRewards += state.reward
+        ttotalRewards += state.reward
+        allRewards.append(state.reward)
+        if not N % plotPoints:
+            rewards.append(ttotalRewards / plotPoints)
+            ttotalRewards = 0
         print(f'Epoch {N+1}, Reward: {state.reward}')
 
+    if training:
+        plt.title('Robby\'s score vs. Episode')
+        plt.plot(range(0, len(rewards)*plotPoints, plotPoints), rewards)
+        plt.xlabel('Episode')
+        plt.ylabel(f'Average rewards over last {plotPoints} epochs')
+        plt.show()
+        
+    else:
+        print(f'Test-Average: {totalRewards/episodes}')
+        print(f'Test-Standard-Deviation: {np.std(allRewards)}') 
 
 
-run(5000, 200, 0.2, 0.9)
+robby = Robby()
+run(robby, 5000, 200, 0.2, 0.9, training=True)
+run(robby, 5000, 200, 0.2, 0.9, training=False)
+
 
